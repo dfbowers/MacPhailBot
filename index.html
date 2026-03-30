@@ -668,20 +668,34 @@ async function sendMessage(text) {
   showThinking();
 
   // Build system context from JSON data
-  const context = `You are a genealogy assistant for the MacPhail family history book, Chapter 10. 
-The family data is provided as JSON below. Use it to answer questions accurately.
-When someone asks about relationships (cousins, siblings, descendants etc), trace the IDs carefully through parent/child links.
-Be warm and conversational. Use first names naturally. Cite MP IDs when helpful.
-If something is not in the data, say so honestly.
+function buildContext(people) {
+  const index = {};
+  people.forEach(p => index[p.id] = p);
+  return people.map(p => {
+    const parts = [`${p.id}: ${p.name}${p.known_as ? ' ('+p.known_as+')' : ''}`];
+    if (p.born) parts.push(`b.${p.born}`);
+    if (p.died) parts.push(`d.${p.died}`);
+    if (p.father && index[p.father]) parts.push(`father:${index[p.father].name}(${p.father})`);
+    if (p.father_name) parts.push(`father:${p.father_name}`);
+    if (p.spouses && p.spouses.length) parts.push(`spouse:${p.spouses.map(s=>s.name+(s.married?' m.'+s.married:'')).join('; ')}`);
+    if (p.children && p.children.length) parts.push(`children:[${p.children.join(',')}]`);
+    if (p.occupation) parts.push(`occ:${p.occupation}`);
+    if (p.notes) parts.push(`notes:${p.notes.slice(0,120)}`);
+    return parts.join(' | ');
+  }).join('\n');
+}
 
-FAMILY DATA:
-${JSON.stringify(PEOPLE, null, 0)}`;
+const context = `You are a genealogy assistant for the MacPhail family history book Chapter 10, covering GRANGER MacPHAIL (MP114154) and CHRISTY MacEachern of Argyle Shore PEI and all their descendants.
+Rules: Be warm and personal. Trace parent/child ID links carefully to work out cousins, siblings, aunts, uncles. First cousins share a grandparent. Show your reasoning step by step. If data is missing say so.
+
+FAMILY DATA (one person per line):
+${buildContext(PEOPLE)}`;
 
   try {
     const payload = {
       system_instruction: { parts: [{ text: context }] },
       contents: chatHistory,
-      generationConfig: { maxOutputTokens: 800, temperature: 0.3 }
+      generationConfig: { maxOutputTokens: 2048, temperature: 0.3 }
     };
 
     const res = await fetch(
