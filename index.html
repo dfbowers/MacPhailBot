@@ -445,12 +445,7 @@
     <!-- Chat Panel -->
     <div class="panel" id="chatPanel">
       <div class="chat-wrap">
-        <div class="api-key-bar">
-          <label>Gemini API Key:</label>
-          <input type="password" id="apiKeyInput" placeholder="Paste your key from aistudio.google.com">
-          <button onclick="saveKey()">Save</button>
-          <span class="api-status unset" id="apiStatus">Not set</span>
-        </div>
+       
         <div class="messages" id="messages"></div>
         <div class="input-row">
           <input class="chat-input" id="chatInput" placeholder="Ask about the MacPhail family..." onkeydown="if(event.key==='Enter')sendMessage()">
@@ -466,7 +461,7 @@
 // ── State ──────────────────────────────────────────────────
 let PEOPLE = [];
 let INDEX = {};
-let apiKey = localStorage.getItem('gemini_key') || '';
+let apiKey = 'AIzaSyANfRAc0WyHMGrW4wgGeS3Cb8Pw1MIgyOA';
 let chatHistory = [];
 
 // ── Boot ───────────────────────────────────────────────────
@@ -598,17 +593,6 @@ function showTab(name) {
   document.getElementById('chatPanel').classList.toggle('active', name === 'chat');
 }
 
-// ── API Key ────────────────────────────────────────────────
-function saveKey() {
-  const val = document.getElementById('apiKeyInput').value.trim();
-  if (val && !val.startsWith('•')) {
-    apiKey = val;
-    localStorage.setItem('gemini_key', val);
-    document.getElementById('apiKeyInput').value = '••••••••••••••••';
-    document.getElementById('apiStatus').textContent = 'Key saved ✓';
-    document.getElementById('apiStatus').className = 'api-status set';
-  }
-}
 
 // ── Chat ───────────────────────────────────────────────────
 function initChat() {
