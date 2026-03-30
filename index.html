@@ -656,17 +656,21 @@ function buildContext(people) {
   const index = {};
   people.forEach(p => index[p.id] = p);
   return people.map(p => {
-    const parts = [`${p.id}: ${p.name}${p.known_as ? ' ('+p.known_as+')' : ''}`];
-    if (p.born) parts.push(`b.${p.born}`);
-    if (p.died) parts.push(`d.${p.died}`);
-    if (p.father && index[p.father]) parts.push(`father:${index[p.father].name}(${p.father})`);
-    if (p.father_name) parts.push(`father:${p.father_name}`);
-    if (p.spouses && p.spouses.length) parts.push(`spouse:${p.spouses.map(s=>s.name).join('; ')}`);
-    if (p.children && p.children.length) parts.push(`children:[${p.children.join(',')}]`);
-    if (p.occupation) parts.push(`occ:${p.occupation}`);
-    if (p.notes) parts.push(`notes:${p.notes.slice(0,60)}`);
-    return parts.join(' | ');
+    const father = p.father && index[p.father] ? index[p.father].name : (p.father_name || '');
+    const kids = (p.children || []).join(',');
+    const spouse = p.spouses ? p.spouses.map(s => s.name).join(';') : '';
+    const aka = p.known_as ? `(${p.known_as})` : '';
+    return [
+      p.id,
+      p.name + aka,
+      p.born ? 'b'+p.born.slice(0,4) : '',
+      p.died ? 'd'+p.died.slice(0,4) : '',
+      father ? 'f:'+father : '',
+      spouse ? 's:'+spouse : '',
+      kids ? 'c:['+kids+']' : ''
+    ].filter(Boolean).join('|');
   }).join('\n');
+}
 }
 
 const context = `You are a genealogy assistant for the MacPhail family history book Chapter 10, covering GRANGER MacPHAIL (MP114154) and CHRISTY MacEachern of Argyle Shore PEI and all their descendants.
