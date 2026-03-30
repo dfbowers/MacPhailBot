@@ -64,7 +64,7 @@
   .dot:nth-child(2) { animation-delay:0.18s; }
   .dot:nth-child(3) { animation-delay:0.36s; }
   @keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:0.35} 40%{transform:translateY(-5px);opacity:1} }
-  .empty-state { display:flex; align-items:center; justify-content:center; height:100%; color:var(--brown); opacity:0.5; font-style:italic; font-size:0.9rem; text-align:center; padding:2rem; }
+  .empty-state { display:flex; align-items:center; justify-content:center; height:200px; color:var(--brown); opacity:0.5; font-style:italic; font-size:0.9rem; text-align:center; padding:2rem; }
 </style>
 </head>
 <body>
@@ -78,7 +78,7 @@
     <header>
       <div class="header-title">
         <h1>MacPhail Family Genealogy</h1>
-        <p>Granger MacPhail (MP114154) &amp; Christy MacEachern · Argyle Shore, PEI</p>
+        <p>Granger MacPhail (MP114154) &amp; Christy MacEachern &middot; Argyle Shore, PEI</p>
       </div>
       <div class="tab-bar">
         <button class="tab active" onclick="showTab('browse')">Browse</button>
@@ -104,8 +104,9 @@
 var PEOPLE = [];
 var INDEX = {};
 var chatHistory = [];
-var WORKER_URL = 'https://quiet-math-cd1dmacphail-gemini.dfbowers.workers.dev';;
+var WORKER_URL = 'https://quiet-math-cd1dmacphail-gemini.dfbowers.workers.dev';
 
+// ── Boot ──────────────────────────────────────────────────────
 async function boot() {
   var res = await fetch('data/family.json');
   var data = await res.json();
@@ -115,14 +116,15 @@ async function boot() {
   initChat();
 }
 
+// ── Sidebar ───────────────────────────────────────────────────
 function renderList(people) {
   var el = document.getElementById('personList');
   el.innerHTML = '';
-  people.slice(0,200).forEach(function(p) {
+  people.slice(0,300).forEach(function(p) {
     var div = document.createElement('div');
     div.className = 'person-item';
     div.dataset.id = p.id;
-    div.innerHTML = '<span class="pid">'+p.id+'</span>'+(p.known_as ? p.known_as+' — ' : '')+p.name;
+    div.innerHTML = '<span class="pid">'+p.id+'</span>'+(p.known_as?p.known_as+' &mdash; ':'')+p.name;
     div.onclick = function() { showPerson(p.id); };
     el.appendChild(div);
   });
@@ -131,53 +133,55 @@ function renderList(people) {
 function filterList(q) {
   q = q.toLowerCase();
   var filtered = q ? PEOPLE.filter(function(p) {
-    return p.name.toLowerCase().includes(q) || (p.known_as && p.known_as.toLowerCase().includes(q)) || p.id.toLowerCase().includes(q);
+    return p.name.toLowerCase().includes(q)||(p.known_as&&p.known_as.toLowerCase().includes(q))||p.id.toLowerCase().includes(q);
   }) : PEOPLE;
   renderList(filtered);
 }
 
+// ── Tab switching ─────────────────────────────────────────────
 function showTab(name) {
-  document.querySelectorAll('.tab').forEach(function(t, i) {
-    t.classList.toggle('active', (i===0 && name==='browse') || (i===1 && name==='chat'));
+  document.querySelectorAll('.tab').forEach(function(t,i) {
+    t.classList.toggle('active',(i===0&&name==='browse')||(i===1&&name==='chat'));
   });
-  document.getElementById('browsePanel').classList.toggle('active', name==='browse');
-  document.getElementById('chatPanel').classList.toggle('active', name==='chat');
+  document.getElementById('browsePanel').classList.toggle('active',name==='browse');
+  document.getElementById('chatPanel').classList.toggle('active',name==='chat');
 }
 
+// ── Browse panel ──────────────────────────────────────────────
 function showPerson(id) {
   var p = INDEX[id];
   if (!p) return;
   document.querySelectorAll('.person-item').forEach(function(el) {
-    el.classList.toggle('active', el.dataset.id === id);
+    el.classList.toggle('active',el.dataset.id===id);
   });
   showTab('browse');
   var father = p.father ? INDEX[p.father] : null;
-  var children = (p.children || []).map(function(cid) { return INDEX[cid]; }).filter(Boolean);
-  var siblings = father ? (father.children || []).map(function(cid) { return INDEX[cid]; }).filter(function(c) { return c && c.id !== id; }) : [];
+  var children = (p.children||[]).map(function(cid){return INDEX[cid];}).filter(Boolean);
+  var siblings = father ? (father.children||[]).map(function(cid){return INDEX[cid];}).filter(function(c){return c&&c.id!==id;}) : [];
   var html = '<div class="person-card">';
-  html += '<h2>'+(p.known_as ? p.known_as+' ' : '')+p.name+'</h2>';
+  html += '<h2>'+(p.known_as?p.known_as+' ':'')+p.name+'</h2>';
   html += '<div class="mp-id">'+p.id+'</div>';
   html += '<div class="info-grid">';
-  if (p.born) html += '<span class="label">Born</span><span>'+p.born+(p.birthplace ? ' — '+p.birthplace : '')+'</span>';
-  if (p.died) html += '<span class="label">Died</span><span>'+p.died+(p.deathplace ? ' — '+p.deathplace : '')+'</span>';
+  if (p.born) html += '<span class="label">Born</span><span>'+p.born+(p.birthplace?' &mdash; '+p.birthplace:'')+'</span>';
+  if (p.died) html += '<span class="label">Died</span><span>'+p.died+(p.deathplace?' &mdash; '+p.deathplace:'')+'</span>';
   if (p.buried) html += '<span class="label">Buried</span><span>'+p.buried+'</span>';
   if (p.occupation) html += '<span class="label">Occupation</span><span>'+p.occupation+'</span>';
   if (p.residence) html += '<span class="label">Residence</span><span>'+p.residence+'</span>';
   html += '</div>';
-  if (father || p.father_name) {
+  if (father||p.father_name) {
     html += '<div class="section-title">Parents</div><div class="relation-list">';
     if (father) html += '<span class="relation-link" onclick="showPerson(\''+father.id+'\')">'+father.name+' ('+father.id+')</span>';
     else if (p.father_name) html += '<span>'+p.father_name+'</span>';
     if (p.mother_name) html += '<span>'+p.mother_name+'</span>';
     html += '</div>';
   }
-  if (p.spouses && p.spouses.length) {
+  if (p.spouses&&p.spouses.length) {
     html += '<div class="section-title">Spouse'+(p.spouses.length>1?'s':'')+'</div><div class="relation-list">';
     p.spouses.forEach(function(s) {
-      if (s.id && INDEX[s.id]) {
-        html += '<span class="relation-link" onclick="showPerson(\''+s.id+'\')">'+s.name+(s.married?' — married '+s.married:'')+'</span>';
+      if (s.id&&INDEX[s.id]) {
+        html += '<span class="relation-link" onclick="showPerson(\''+s.id+'\')">'+s.name+(s.married?' &mdash; married '+s.married:'')+'</span>';
       } else {
-        html += '<span style="font-size:0.84rem">'+s.name+(s.married?' — married '+s.married:'')+'</span>';
+        html += '<span style="font-size:0.84rem">'+s.name+(s.married?' &mdash; married '+s.married:'')+'</span>';
       }
     });
     html += '</div>';
@@ -201,30 +205,105 @@ function showPerson(id) {
   document.getElementById('personDetail').innerHTML = html;
 }
 
-function buildContext(people) {
-  var idx = {};
-  people.forEach(function(p) { idx[p.id] = p; });
-  return people.map(function(p) {
-    var father = p.father && idx[p.father] ? idx[p.father].name : (p.father_name || '');
-    var kids = (p.children || []).join(',');
-    var spouse = p.spouses ? p.spouses.map(function(s) { return s.name; }).join(';') : '';
-    var aka = p.known_as ? '('+p.known_as+')' : '';
-    return [
-      p.id,
-      p.name+aka,
-      p.born ? 'b'+p.born.slice(0,4) : '',
-      p.died ? 'd'+p.died.slice(0,4) : '',
-      father ? 'f:'+father : '',
-      spouse ? 's:'+spouse : '',
-      kids ? 'c:['+kids+']' : ''
-    ].filter(Boolean).join('|');
-  }).join('\n');
+// ── Smart context builder ─────────────────────────────────────
+// Finds people mentioned by name in the user's message and returns
+// only them plus their extended family — keeps payload small.
+
+function personToText(p) {
+  var parts = [p.id+': '+p.name+(p.known_as?' ('+p.known_as+')':'')];
+  if (p.born) parts.push('born '+p.born+(p.birthplace?' at '+p.birthplace:''));
+  if (p.died) parts.push('died '+p.died+(p.deathplace?' at '+p.deathplace:''));
+  if (p.buried) parts.push('buried '+p.buried);
+  if (p.occupation) parts.push('occupation: '+p.occupation);
+  if (p.residence) parts.push('lives at '+p.residence);
+  var fatherObj = p.father ? INDEX[p.father] : null;
+  if (fatherObj) parts.push('father: '+fatherObj.name+' ('+p.father+')');
+  else if (p.father_name) parts.push('father: '+p.father_name);
+  if (p.mother_name) parts.push('mother: '+p.mother_name);
+  if (p.spouses&&p.spouses.length) {
+    parts.push('spouse(s): '+p.spouses.map(function(s){return s.name+(s.married?' m.'+s.married:'');}).join('; '));
+  }
+  if (p.children&&p.children.length) {
+    var childNames = p.children.map(function(cid){
+      var c = INDEX[cid];
+      return c ? c.name+'('+cid+')' : cid;
+    });
+    parts.push('children: '+childNames.join(', '));
+  }
+  if (p.notes) parts.push('notes: '+p.notes.slice(0,80));
+  return parts.join('. ');
 }
 
+function getRelevantPeople(message) {
+  var msg = message.toLowerCase();
+  var relevant = {};
+
+  // Find people mentioned by name or ID in the message
+  PEOPLE.forEach(function(p) {
+    var nameLower = p.name.toLowerCase();
+    var akaLower = p.known_as ? p.known_as.toLowerCase() : '';
+    if (msg.includes(nameLower) || (akaLower && msg.includes(akaLower)) || msg.includes(p.id.toLowerCase())) {
+      relevant[p.id] = true;
+    }
+    // Also match first names and last names individually
+    var parts = p.name.toLowerCase().split(' ');
+    parts.forEach(function(part) {
+      if (part.length > 3 && msg.includes(part)) {
+        relevant[p.id] = true;
+      }
+    });
+  });
+
+  // For each found person, add their extended family
+  var toExpand = Object.keys(relevant).slice();
+  toExpand.forEach(function(id) {
+    var p = INDEX[id];
+    if (!p) return;
+    // Add parents
+    if (p.father && INDEX[p.father]) relevant[p.father] = true;
+    // Add siblings (other children of same parent)
+    if (p.father && INDEX[p.father]) {
+      var parentChildren = INDEX[p.father].children || [];
+      parentChildren.forEach(function(cid) { if (INDEX[cid]) relevant[cid] = true; });
+    }
+    // Add children
+    (p.children||[]).forEach(function(cid) { if (INDEX[cid]) relevant[cid] = true; });
+    // Add grandparent and aunts/uncles (for cousin questions)
+    if (p.father && INDEX[p.father]) {
+      var grandparentId = INDEX[p.father].father;
+      if (grandparentId && INDEX[grandparentId]) {
+        relevant[grandparentId] = true;
+        // Add all aunts/uncles
+        var gpChildren = INDEX[grandparentId].children || [];
+        gpChildren.forEach(function(uncleId) {
+          if (INDEX[uncleId]) {
+            relevant[uncleId] = true;
+            // Add cousins
+            (INDEX[uncleId].children||[]).forEach(function(cousinId) {
+              if (INDEX[cousinId]) relevant[cousinId] = true;
+            });
+          }
+        });
+      }
+    }
+  });
+
+  // If nobody found by name, fall back to a compact summary of everyone
+  var ids = Object.keys(relevant);
+  if (ids.length === 0) {
+    return PEOPLE.map(function(p) {
+      return p.id+'|'+p.name+(p.known_as?'('+p.known_as+')':'')+'|'+(p.born?p.born.slice(0,4):'')+'|'+(p.father&&INDEX[p.father]?INDEX[p.father].name:'')+'|'+(p.children&&p.children.length?p.children.length+' children':'');
+    }).join('\n');
+  }
+
+  return ids.map(function(id) { return personToText(INDEX[id]); }).join('\n\n');
+}
+
+// ── Chat ──────────────────────────────────────────────────────
 function initChat() {
   addBotMessage(
-    'Welcome to the MacPhail family records. I have data on Granger MacPhail (MP114154), Christy MacEachern, and all their descendants across Argyle Shore, PEI and beyond. Tell me your name and who you are descended from and I can answer questions about your family connections.',
-    ['Who was Granger MacPhail?','Who were Jack and Rotha\'s children?','Tell me about the Mitchell family','Who is Leslie MacPhail?','What happened to Sadie?']
+    'Welcome to the MacPhail family records. I have detailed genealogy data for Granger MacPhail (MP114154) and Christy MacEachern of Argyle Shore, PEI — 13 children and all their descendants.\n\nTell me your name and who you are descended from, and I can answer questions about births, deaths, occupations, marriages, and family relationships.',
+    ['Who was Granger MacPhail?','Tell me about Frederick MacPhail','Who were Jack and Rotha\'s children?','What was Sterling MacPhail\'s occupation?','Tell me about Midi MacPhail\'s family']
   );
 }
 
@@ -269,13 +348,18 @@ function sendMessage(text) {
   input.value = '';
   document.getElementById('sendBtn').disabled = true;
   addUserMessage(userText);
+
+  // Build a combined message including conversation history for context extraction
+  var allText = chatHistory.map(function(h){return h.parts[0].text;}).join(' ') + ' ' + userText;
+  var relevantData = getRelevantPeople(allText);
+
   chatHistory.push({ role:'user', parts:[{ text:userText }] });
   showThinking();
 
-  var context = 'You are a genealogy assistant for the MacPhail family history book Chapter 10, covering GRANGER MacPHAIL (MP114154) and CHRISTY MacEachern of Argyle Shore PEI and all their descendants.\n\nRules:\n- Be warm and personal\n- Trace parent/child ID links carefully to work out cousins, siblings, aunts, uncles\n- First cousins share a grandparent — find the common grandparent then list all children of each of their children\n- Show your reasoning step by step\n- Always complete your full answer before stopping\n- If data is missing say so\n\nFAMILY DATA (one person per line: ID|name|born|died|father|spouse|children):\n' + buildContext(PEOPLE);
+  var systemPrompt = 'You are a warm, knowledgeable genealogy assistant for the MacPhail family history book, Chapter 10.\n\nThe family is from Argyle Shore, Prince Edward Island, Canada. The root couple is GRANGER MacPHAIL (MP114154) and CHRISTY MacEachern.\n\nRules:\n- Be warm and conversational, use first names naturally\n- Answer the question completely — never cut off mid-answer\n- For relationship questions (cousins, aunts, uncles) explain your reasoning step by step\n- First cousins = children of your parent\'s siblings (they share your grandparents)\n- Cite MP ID numbers when listing people so they can look them up\n- If information is not in the data provided, say so honestly\n\nRELEVANT FAMILY DATA:\n' + relevantData;
 
   var payload = {
-    system_instruction: { parts:[{ text:context }] },
+    system_instruction: { parts:[{ text:systemPrompt }] },
     contents: chatHistory,
     generationConfig: { maxOutputTokens:2048, temperature:0.3 }
   };
@@ -289,11 +373,11 @@ function sendMessage(text) {
       var thinkEl = document.getElementById('thinking');
       if (thinkEl) thinkEl.remove();
       if (!res.ok) {
-        addBotMessage('API error ('+res.status+'): '+(data && data.error && data.error.message ? data.error.message : JSON.stringify(data)));
+        addBotMessage('API error ('+res.status+'): '+(data&&data.error&&data.error.message?data.error.message:JSON.stringify(data)));
         document.getElementById('sendBtn').disabled = false;
         return;
       }
-      var reply = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text) ? data.candidates[0].content.parts[0].text : 'No response received.';
+      var reply = data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]?data.candidates[0].content.parts[0].text:'No response received.';
       chatHistory.push({ role:'model', parts:[{ text:reply }] });
       addBotMessage(reply);
       document.getElementById('sendBtn').disabled = false;
