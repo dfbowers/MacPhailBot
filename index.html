@@ -661,10 +661,10 @@ function buildContext(people) {
     if (p.died) parts.push(`d.${p.died}`);
     if (p.father && index[p.father]) parts.push(`father:${index[p.father].name}(${p.father})`);
     if (p.father_name) parts.push(`father:${p.father_name}`);
-    if (p.spouses && p.spouses.length) parts.push(`spouse:${p.spouses.map(s=>s.name+(s.married?' m.'+s.married:'')).join('; ')}`);
+    if (p.spouses && p.spouses.length) parts.push(`spouse:${p.spouses.map(s=>s.name).join('; ')}`);
     if (p.children && p.children.length) parts.push(`children:[${p.children.join(',')}]`);
     if (p.occupation) parts.push(`occ:${p.occupation}`);
-    if (p.notes) parts.push(`notes:${p.notes.slice(0,120)}`);
+    if (p.notes) parts.push(`notes:${p.notes.slice(0,60)}`);
     return parts.join(' | ');
   }).join('\n');
 }
