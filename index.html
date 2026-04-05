@@ -177,6 +177,13 @@ async function boot() {
   PEOPLE.forEach(function(p) { INDEX[p.id] = p; });
   renderList(PEOPLE);
   initChat();
+  // On mobile, default to chat view
+  if (isMobile()) {
+    document.getElementById('browsePanel').classList.remove('active');
+    document.getElementById('chatPanel').classList.add('active');
+    document.getElementById('sidebar').classList.add('hidden');
+    document.getElementById('main').classList.add('visible');
+  }
 }
 
 function renderList(people) {
@@ -335,7 +342,7 @@ function addBotMessage(text, suggestions) {
   var div = document.createElement('div');
   div.className = 'msg';
   var bh = text.split('\n').filter(function(l){return l.trim();}).map(function(l){
-    l = l.replace(/\b(MP[\w\d]+)\b/g,function(m){ return INDEX[m]?'<span class="mp-link" onclick="showPerson(\''+m+'\')" title="View '+INDEX[m].name+'">'+m+'</span>':m; });
+    l = l.replace(/\b(MP[\w\d]+)\b/g,function(m){ return INDEX[m]?'<span class="mp-link" onclick="showPerson(\''+m+'\')" title="View '+INDEX[m].name+'">' +m+'</span>':m; });
     return '<p>'+l+'</p>';
   }).join('');
   if (suggestions) bh += '<div class="suggestions">'+suggestions.map(function(s){ return '<button class="sug-btn" onclick="sendMessage(\''+s.replace(/'/g,"\\'")+'\')">' +s+'</button>'; }).join('')+'</div>';
