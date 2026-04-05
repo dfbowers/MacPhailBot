@@ -43,6 +43,9 @@
   /* Back button — mobile only */
   .back-btn { display:none; align-items:center; gap:0.25rem; background:none; border:none; color:var(--green-dark); font-family:'Inter',sans-serif; font-size:0.9rem; font-weight:600; cursor:pointer; padding:0.3rem 0.1rem; flex-shrink:0; }
 
+  /* Chat button in sidebar — mobile only */
+  .sidebar-chat-btn { display:none; width:100%; padding:0.65rem; background:var(--green); color:white; border:none; border-radius:6px; font-family:'Inter',sans-serif; font-size:0.88rem; font-weight:600; cursor:pointer; }
+
   /* Single ask button */
   .ask-btn { padding:0.55rem 1.5rem; border:none; background:var(--green); color:white; font-family:'Inter',sans-serif; font-size:0.9rem; font-weight:600; cursor:pointer; border-radius:6px; transition:background 0.15s; letter-spacing:0.01em; white-space:nowrap; }
   .ask-btn:hover { background:var(--green-mid); }
@@ -114,6 +117,7 @@
     .person-card { padding:1rem; }
     .info-grid { grid-template-columns:80px 1fr; }
     .chat-wrap { height:calc(100vh - 95px); }
+    .sidebar-chat-btn { display:block; }
   }
 </style>
 </head>
@@ -121,6 +125,7 @@
 <div class="layout">
   <aside class="sidebar" id="sidebar">
     <h2>Family Members</h2>
+    <button class="sidebar-chat-btn" onclick="openChat()">&#8592; Back to Chat</button>
     <input class="search-box" id="searchBox" placeholder="Search by name..." oninput="filterList(this.value)">
     <div class="person-list" id="personList"></div>
   </aside>
